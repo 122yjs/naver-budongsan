@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateDisplay();
         setupEventListeners();
         
+        // 6. 정렬 헤더 초기 상태 설정
+        updateSortHeaders();
+        
         console.log('✅ 애플리케이션 초기화 완료');
         console.log('📊 차트 데이터 검증:', {
             villageCount: new Set(window.apartmentData.map(item => item.마을분류)).size,
@@ -533,14 +536,15 @@ function setupEventListeners() {
         }
     });
 
-    // 정렬 변경 이벤트
-    document.getElementById('sortSelect').addEventListener('change', function(e) {
-        currentSort = e.target.value;
-        updateTable();
-    });
-
-    // 필터 버튼 이벤트 (이벤트 위임 사용)
+    // 테이블 헤더 클릭 정렬 이벤트
     document.addEventListener('click', function(e) {
+        const sortableHeader = e.target.closest('th.sortable');
+        if (sortableHeader) {
+            handleHeaderSort(sortableHeader);
+            return;
+        }
+
+        // 필터 버튼 이벤트
         const target = e.target.closest('button');
         if (!target) return;
 
@@ -558,6 +562,62 @@ function setupEventListeners() {
             applyFilters();
         }
     });
+}
+
+// 테이블 헤더 정렬 처리
+function handleHeaderSort(header) {
+    const sortType = header.dataset.sort;
+    const baseSortType = sortType.split('-')[0]; // 'price', 'pyeong', 'name' 등
+    const currentBaseSortType = currentSort.split('-')[0];
+    
+    // 같은 컬럼을 클릭한 경우
+    if (baseSortType === currentBaseSortType) {
+        if (currentSort === baseSortType) {
+            // 첫 번째 클릭: 기본 -> 내림차순
+            currentSort = baseSortType + '-desc';
+        } else if (currentSort === baseSortType + '-desc') {
+            // 두 번째 클릭: 내림차순 -> 오름차순
+            currentSort = baseSortType + '-asc';
+        } else if (currentSort === baseSortType + '-asc') {
+            // 세 번째 클릭: 오름차순 -> 기본 정렬 (price-desc)
+            currentSort = 'price-desc';
+        }
+    } else {
+        // 다른 컬럼을 클릭한 경우: 내림차순으로 시작
+        currentSort = baseSortType + '-desc';
+    }
+    
+    // 헤더 업데이트
+    updateSortHeaders();
+    
+    // 테이블 업데이트
+    updateTable();
+}
+
+// 정렬 헤더 상태 업데이트
+function updateSortHeaders() {
+    // 모든 정렬 가능한 헤더에서 active 클래스 제거
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('active');
+        const icon = th.querySelector('i');
+        if (icon) {
+            icon.className = 'fas fa-sort ms-1 text-muted';
+        }
+    });
+    
+    // 현재 정렬 컬럼에 active 클래스 추가 및 아이콘 변경
+    const currentHeader = document.querySelector(`th.sortable[data-sort^="${currentSort.split('-')[0]}"]`);
+    if (currentHeader) {
+        currentHeader.classList.add('active');
+        const icon = currentHeader.querySelector('i');
+        if (icon) {
+            if (currentSort.includes('-desc')) {
+                icon.className = 'fas fa-sort-down ms-1';
+            } else if (currentSort.includes('-asc')) {
+                icon.className = 'fas fa-sort-up ms-1';
+            }
+        }
+    }
 }
 
 // 필터 적용
@@ -712,8 +772,24 @@ function getSortFunction(sortType) {
             return (a, b) => (a['평당가격(만원)'] || 0) - (b['평당가격(만원)'] || 0);
         case 'name-asc':
             return (a, b) => a.단지명.localeCompare(b.단지명);
+        case 'name-desc':
+            return (a, b) => b.단지명.localeCompare(a.단지명);
+        case 'village-asc':
+            return (a, b) => a.마을분류.localeCompare(b.마을분류);
+        case 'village-desc':
+            return (a, b) => b.마을분류.localeCompare(a.마을분류);
         case 'area-desc':
             return (a, b) => (b['대표면적(㎡)'] || 0) - (a['대표면적(㎡)'] || 0);
+        case 'area-asc':
+            return (a, b) => (a['대표면적(㎡)'] || 0) - (b['대표면적(㎡)'] || 0);
+        case 'year-desc':
+            return (a, b) => (b.준공년월 || 0) - (a.준공년월 || 0);
+        case 'year-asc':
+            return (a, b) => (a.준공년월 || 0) - (b.준공년월 || 0);
+        case 'households-desc':
+            return (a, b) => (b.총세대수 || 0) - (a.총세대수 || 0);
+        case 'households-asc':
+            return (a, b) => (a.총세대수 || 0) - (b.총세대수 || 0);
         default:
             return (a, b) => 0;
     }
