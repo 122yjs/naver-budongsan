@@ -433,7 +433,7 @@ function calculateVillageStats() {
     // 가격 높은 순으로 정렬
     const sorted = Object.entries(stats)
         .sort(([,a], [,b]) => b - a)
-        .slice(0, 12); // 상위 12개만
+        .slice(0, 16); // 상위 16개만
     
     return {
         labels: sorted.map(([village]) => village.replace('마을', '')),
