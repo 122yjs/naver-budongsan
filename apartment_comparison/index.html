@@ -140,9 +140,17 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
             padding: 1.5rem;
             margin-bottom: 2rem;
-            height: 400px;
+            height: 500px;
             position: relative;
             overflow: hidden;
+        }
+        
+        .chart-container.village-chart {
+            height: 600px;
+        }
+        
+        .chart-container.price-chart {
+            height: 500px;
         }
 
         .no-results {
@@ -159,7 +167,15 @@
             }
             
             .chart-container {
-                height: 350px;
+                height: 450px;
+            }
+            
+            .chart-container.village-chart {
+                height: 550px;
+            }
+            
+            .chart-container.price-chart {
+                height: 450px;
             }
             
             .stat-number {
@@ -182,8 +198,16 @@
             }
             
             .chart-container {
-                height: 300px;
+                height: 400px;
                 padding: 1rem;
+            }
+            
+            .chart-container.village-chart {
+                height: 500px;
+            }
+            
+            .chart-container.price-chart {
+                height: 400px;
             }
             
             .stats-card {
@@ -316,7 +340,15 @@
             }
             
             .chart-container {
-                height: 180px;
+                height: 300px;
+            }
+            
+            .chart-container.village-chart {
+                height: 350px;
+            }
+            
+            .chart-container.price-chart {
+                height: 300px;
             }
             
             .table-responsive {
@@ -444,14 +476,14 @@
 
         <!-- Charts -->
         <div class="row">
-            <div class="col-lg-6 mb-4">
-                <div class="chart-container">
-                    <h4><i class="fas fa-chart-bar me-2"></i>마을별 평균 가격</h4>
+            <div class="col-lg-8 mb-4">
+                <div class="chart-container village-chart">
+                    <h4><i class="fas fa-chart-bar me-2"></i>마을별 평균 가격 & 평당 평균 가격</h4>
                     <canvas id="villageChart"></canvas>
                 </div>
             </div>
-            <div class="col-lg-6 mb-4">
-                <div class="chart-container">
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container price-chart">
                     <h4><i class="fas fa-chart-pie me-2"></i>가격대별 분포</h4>
                     <canvas id="priceChart"></canvas>
                 </div>
