@@ -1,55 +1,24 @@
 // 세종시 아파트 데이터 및 분류 시스템
 // 데이터 기준: 2024년 7월
 
-// 16개 실제 아파트 마을 (데이터 존재하는 마을만)
-const VILLAGES = [
-    '가락마을', '가온마을', '가재마을', '나릿재마을', '도램마을', 
-    '범지기마을', '산울마을', '새나루마을', '새뜸마을', '새샘마을',
-    '수루배마을', '첫마을', '한뜰마을', '해들마을', '해밀마을', 
-    '호려울마을', '기타(도시형/오피스텔)'
-];
-
-// 10단계 균등 분포 가격 구간
-const PRICE_RANGES = [
-    { min: 0, max: 10450, name: "1억 미만" },
-    { min: 10450, max: 13000, name: "1억대" },
-    { min: 13000, max: 38730, name: "1억 후반-3억대" },
-    { min: 38730, max: 46000, name: "3-4억대" },
-    { min: 46000, max: 50000, name: "4-5억대" },
-    { min: 50000, max: 60000, name: "5-6억대" },
-    { min: 60000, max: 67300, name: "6-7억대" },
-    { min: 67300, max: 73600, name: "7-8억대" },
-    { min: 73600, max: 86400, name: "8-9억대" },
-    { min: 86400, max: 200000, name: "9억 이상" }
-];
+// 표준 분류 체계 임포트
+import { VILLAGES, PRICE_RANGES, AREA_TYPES, VILLAGE_KEYWORDS } from './constants.js';
 
 // 마을 분류 함수
 function classifyVillage(complexName) {
-    const villageKeywords = {
-        '가락': '가락마을',
-        '가온': '가온마을', 
-        '가재': '가재마을',
-        '나릿재': '나릿재마을',
-        '도램': '도램마을',
-        '범지기': '범지기마을',
-        '산울': '산울마을',
-        '새나루': '새나루마을',
-        '새뜸': '새뜸마을',
-        '새샘': '새샘마을',
-        '수루배': '수루배마을',
-        '첫마을': '첫마을',
-        '한뜰': '한뜰마을',
-        '해들': '해들마을',
-        '해밀': '해밀마을',
-        '호려울': '호려울마을'
-    };
-    
-    for (const [keyword, villageName] of Object.entries(villageKeywords)) {
+    // 1순위: 예외 처리 (특정 단지 우선 분류)
+    if (complexName.includes('우빈가온')) {
+        return '기타(도시형/오피스텔)';
+    }
+
+    // 2순위: 직접 마을명 매칭
+    for (const [keyword, villageName] of Object.entries(VILLAGE_KEYWORDS)) {
         if (complexName.includes(keyword)) {
             return villageName;
         }
     }
     
+    // 3순위: 특별한 패턴 처리
     // 도담 패턴도 도램마을로 분류
     if (complexName.includes('도담')) {
         return '도램마을';
@@ -75,11 +44,12 @@ function classifyPriceRange(price) {
 function classifyAreaType(area) {
     if (!area) return '정보없음';
     
-    const pyeong = area / 3.3;
+    for (const range of AREA_TYPES) {
+        if (area >= range.min && area < range.max) {
+            return range.name;
+        }
+    }
     
-    if (pyeong < 20) return '소형 (20평 미만)';
-    if (pyeong < 30) return '중소형 (20-30평)';
-    if (pyeong < 40) return '중형 (30-40평)';
     return '대형 (40평 이상)';
 }
 

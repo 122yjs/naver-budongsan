@@ -1,6 +1,9 @@
 // 세종시 아파트 가격 비교 애플리케이션
 // 메인 로직 및 이벤트 처리
 
+// 표준 분류 체계 임포트
+import { VILLAGES, PRICE_RANGES } from './constants.js';
+
 // 전역 변수
 let villageChart = null;
 let priceChart = null;
@@ -168,7 +171,7 @@ function initializePriceFilters() {
         <div class="filter-item">
             <input type="checkbox" id="price-${range.name}" value="${range.name}" checked>
             <label for="price-${range.name}" class="mb-0">
-                ${range.name} <span class="text-muted">(${priceCounts[range.name]}개)</span>
+                ${range.name} <span class="text-muted">(${priceCounts[range.name] || 0}개)</span>
             </label>
         </div>
     `).join('');

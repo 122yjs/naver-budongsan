@@ -211,6 +211,9 @@ def main():
     classifier = SejongApartmentClassifier()
     result = classifier.process_data(raw_data)
     
+    # 분류 스키마를 JavaScript 모듈로 내보내기
+    classifier.export_classification_schema()
+    
     print("\n🏘️ 마을별 분류 결과:")
     print("-" * 60)
     sorted_villages = sorted(
@@ -230,6 +233,58 @@ def main():
     
     print(f"\n✅ 처리 완료! 결과가 다음 파일에 저장되었습니다: {output_file}")
     return result
+
+def export_classification_schema(self):
+    """분류 스키마를 JavaScript에서 사용할 수 있는 형식으로 내보내기"""
+    schema = {
+        "village_keywords": self.village_keywords,
+        "price_ranges": [
+            {"min": min_price, "max": max_price, "name": range_name}
+            for min_price, max_price, range_name in self.price_ranges
+        ],
+        "area_types": [
+            {"min": 0, "max": 66, "name": "소형 (20평 미만)"},
+            {"min": 66, "max": 99, "name": "중소형 (20-30평)"},
+            {"min": 99, "max": 132, "name": "중형 (30-40평)"},
+            {"min": 132, "max": 1000, "name": "대형 (40평 이상)"}
+        ]
+    }
+    
+    # 스키마를 JavaScript 모듈로 저장
+    js_file_path = os.path.join(script_dir, 'apartment_comparison', 'constants.js')
+    with open(js_file_path, 'w', encoding='utf-8') as f:
+        f.write("// 세종시 아파트 데이터 표준 분류 체계\n")
+        f.write("// sejong_data_processor.py에서 자동 생성됨\n\n")
+        
+        # 마을 목록
+        f.write("export const VILLAGES = [\n")
+        villages = list(self.village_keywords.values()) + ['기타(도시형/오피스텔)']
+        villages_str = ", ".join([f"'{v}'" for v in villages])
+        f.write(f"    {villages_str}\n");
+        f.write("];\n\n")
+        
+        # 가격 구간
+        f.write("export const PRICE_RANGES = [\n")
+        for range_data in schema["price_ranges"]:
+            f.write(f"    {{ min: {range_data['min']}, max: {range_data['max']}, "
+                   f"name: \"{range_data['name']}\" }},\n")
+        f.write("];\n\n")
+        
+        # 평형 구간
+        f.write("export const AREA_TYPES = [\n")
+        for area_type in schema["area_types"]:
+            f.write(f"    {{ min: {area_type['min']}, max: {area_type['max']}, "
+                   f"name: \"{area_type['name']}\" }},\n")
+        f.write("];\n\n")
+        
+        # 마을 키워드
+        f.write("export const VILLAGE_KEYWORDS = {\n")
+        for keyword, village in self.village_keywords.items():
+            f.write(f"    '{keyword}': '{village}',\n")
+        f.write("};\n")
+    
+    print(f"✅ 분류 스키마가 JavaScript 모듈로 저장되었습니다: {js_file_path}")
+    return schema
 
 if __name__ == "__main__":
     main()
