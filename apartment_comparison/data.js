@@ -74,8 +74,10 @@ function formatArea(area) {
 
 // 준공년도 추출 함수
 function extractYear(yearMonth) {
-    if (!yearMonth || yearMonth.length < 4) return '정보없음';
-    return yearMonth.substring(0, 4) + '년';
+    if (!yearMonth) return '정보없음';
+    const yearStr = String(yearMonth);
+    if (yearStr.length < 4) return '정보없음';
+    return yearStr.substring(0, 4) + '년';
 }
 
 // 가격 배지 클래스 결정
@@ -91,7 +93,12 @@ function getPriceBadgeClass(price) {
 async function loadApartmentData() {
     try {
         // 실제 환경에서는 JSON 파일에서 로드
-        const response = await fetch('../data/sejong_classified.json');
+        const response = await fetch('/data/sejong_classified.json');
+        console.log('Fetching data from:', '/data/sejong_classified.json');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const rawData = await response.json();
         
         // 데이터 처리 및 분류
@@ -237,8 +244,11 @@ window.apartmentData = [];
 window.filteredData = [];
 
 // 데이터 초기화
-async function initializeData() {
+export async function initializeData() {
     window.apartmentData = await loadApartmentData();
     window.filteredData = [...window.apartmentData];
     console.log('데이터 로딩 완료:', window.apartmentData.length, '개 단지');
 }
+
+// 분류 함수들도 export
+export { classifyVillage, classifyPriceRange, classifyAreaType, formatPrice, formatArea, extractYear, getPriceBadgeClass };

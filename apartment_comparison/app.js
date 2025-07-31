@@ -3,6 +3,8 @@
 
 // 표준 분류 체계 임포트
 import { VILLAGES, PRICE_RANGES } from './constants.js';
+// 데이터 처리 함수 임포트
+import { initializeData } from './data.js';
 
 // 전역 변수
 let villageChart = null;
