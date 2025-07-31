@@ -248,20 +248,58 @@ function initializeVillageChart() {
                 data: villageData.prices,
                 backgroundColor: 'rgba(37, 99, 235, 0.6)',
                 borderColor: 'rgba(37, 99, 235, 1)',
-                borderWidth: 1
+                borderWidth: 1,
+                yAxisID: 'y'
+            }, {
+                label: '평당 평균 가격 (만원)',
+                data: villageData.pyeongPrices,
+                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 1,
+                yAxisID: 'y1'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top'
                 }
             },
             scales: {
                 y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
                     beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '평균 가격 (만원)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + '만원';
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '평당 평균 가격 (만원)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    },
                     ticks: {
                         callback: function(value) {
                             return value.toLocaleString() + '만원';
@@ -279,7 +317,9 @@ function initializeVillageChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `평균 가격: ${context.parsed.y.toLocaleString()}만원`;
+                            const label = context.dataset.label;
+                            const value = context.parsed.y.toLocaleString();
+                            return `${label}: ${value}만원`;
                         }
                     }
                 }
@@ -348,11 +388,12 @@ function initializePriceChart() {
 // 마을별 통계 계산
 function calculateVillageStats() {
     const stats = {};
+    const pyeongStats = {};
     
     // 데이터 유효성 검증
     if (!window.filteredData || window.filteredData.length === 0) {
         console.warn('⚠️ 마을별 통계 계산: 필터링된 데이터가 없습니다');
-        return { labels: [], prices: [] };
+        return { labels: [], prices: [], pyeongPrices: [] };
     }
     
     // 기타 제외하고 실제 마을만
@@ -363,21 +404,30 @@ function calculateVillageStats() {
             item.마을분류 === village && 
             item['중간매매가(만원)'] && 
             !isNaN(item['중간매매가(만원)']) &&
-            item['중간매매가(만원)'] > 0
+            item['중간매매가(만원)'] > 0 &&
+            item['평당가격(만원)'] &&
+            !isNaN(item['평당가격(만원)']) &&
+            item['평당가격(만원)'] > 0
         );
         
         if (villageData.length > 0) {
+            // 평균 가격 계산
             const prices = villageData.map(item => item['중간매매가(만원)']);
             stats[village] = prices.reduce((a, b) => a + b, 0) / prices.length;
+            
+            // 평당 평균 가격 계산
+            const pyeongPrices = villageData.map(item => item['평당가격(만원)']);
+            pyeongStats[village] = pyeongPrices.reduce((a, b) => a + b, 0) / pyeongPrices.length;
         }
     });
     
     console.log('📊 마을별 통계:', stats);
+    console.log('📊 마을별 평당 통계:', pyeongStats);
     
     // 데이터가 없으면 빈 결과 반환
     if (Object.keys(stats).length === 0) {
         console.warn('⚠️ 마을별 통계: 유효한 가격 데이터가 없습니다');
-        return { labels: [], prices: [] };
+        return { labels: [], prices: [], pyeongPrices: [] };
     }
     
     // 가격 높은 순으로 정렬
@@ -387,7 +437,8 @@ function calculateVillageStats() {
     
     return {
         labels: sorted.map(([village]) => village.replace('마을', '')),
-        prices: sorted.map(([, price]) => Math.round(price))
+        prices: sorted.map(([village, price]) => Math.round(price)),
+        pyeongPrices: sorted.map(([village]) => Math.round(pyeongStats[village] || 0))
     };
 }
 
@@ -635,6 +686,7 @@ function updateCharts() {
             if (villageData.labels && villageData.labels.length > 0) {
                 villageChart.data.labels = villageData.labels;
                 villageChart.data.datasets[0].data = villageData.prices;
+                villageChart.data.datasets[1].data = villageData.pyeongPrices;
                 villageChart.update();
             } else {
                 console.warn('⚠️ 마을별 차트 업데이트: 데이터가 없습니다');
