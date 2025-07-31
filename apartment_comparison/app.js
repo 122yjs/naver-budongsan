@@ -142,6 +142,7 @@ function initializeFilters() {
 // 마을 필터 초기화
 function initializeVillageFilters() {
     const container = document.getElementById('villageFilters');
+    const headerSelect = document.getElementById('villageHeaderFilter');
     
     // 마을별 단지 수 계산
     const villageCounts = {};
@@ -151,6 +152,7 @@ function initializeVillageFilters() {
         ).length;
     });
     
+    // 기존 체크박스 필터 초기화
     container.innerHTML = VILLAGES.filter(village => village !== '전체').map(village => `
         <div class="filter-item">
             <input type="checkbox" id="village-${village}" value="${village}" checked>
@@ -159,6 +161,45 @@ function initializeVillageFilters() {
             </label>
         </div>
     `).join('');
+    
+    // 헤더 드롭다운 초기화
+    if (headerSelect) {
+        headerSelect.innerHTML = '<option value="">전체</option>' + 
+            VILLAGES.filter(village => village !== '전체').map(village => 
+                `<option value="${village}">${village} (${villageCounts[village]}개)</option>`
+            ).join('');
+        
+        // 헤더 드롭다운 이벤트 리스너 추가
+        headerSelect.addEventListener('change', handleVillageHeaderFilter);
+    }
+}
+
+// 마을 헤더 필터 핸들러
+function handleVillageHeaderFilter(event) {
+    const selectedVillage = event.target.value;
+    
+    // 모든 마을 체크박스 해제
+    const villageCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
+    villageCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // 선택된 마을만 체크 (전체 선택인 경우 모든 마을 체크)
+    if (selectedVillage === '') {
+        // 전체 선택
+        villageCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+    } else {
+        // 특정 마을 선택
+        const targetCheckbox = document.getElementById(`village-${selectedVillage}`);
+        if (targetCheckbox) {
+            targetCheckbox.checked = true;
+        }
+    }
+    
+    // 필터 적용
+    applyFilters();
 }
 
 // 가격 필터 초기화
@@ -774,10 +815,7 @@ function getSortFunction(sortType) {
             return (a, b) => a.단지명.localeCompare(b.단지명);
         case 'name-desc':
             return (a, b) => b.단지명.localeCompare(a.단지명);
-        case 'village-asc':
-            return (a, b) => a.마을분류.localeCompare(b.마을분류);
-        case 'village-desc':
-            return (a, b) => b.마을분류.localeCompare(a.마을분류);
+
         case 'area-desc':
             return (a, b) => (b['대표면적(㎡)'] || 0) - (a['대표면적(㎡)'] || 0);
         case 'area-asc':

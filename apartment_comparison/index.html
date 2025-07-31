@@ -529,8 +529,14 @@
                             <th class="sortable" data-sort="name-asc" style="cursor: pointer;">
                                 단지명 <i class="fas fa-sort ms-1 text-muted"></i>
                             </th>
-                            <th class="sortable" data-sort="village-asc" style="cursor: pointer;">
-                                마을 <i class="fas fa-sort ms-1 text-muted"></i>
+                            <th>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">마을</span>
+                                    <select id="villageHeaderFilter" class="form-select form-select-sm" style="width: auto; min-width: 120px;">
+                                        <option value="">전체</option>
+                                        <!-- 동적으로 생성됨 -->
+                                    </select>
+                                </div>
                             </th>
                             <th class="sortable" data-sort="price-desc" style="cursor: pointer;">
                                 중간매매가 <i class="fas fa-sort ms-1 text-muted"></i>
