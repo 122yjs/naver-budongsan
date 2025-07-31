@@ -93,7 +93,7 @@ function getPriceBadgeClass(price) {
 async function loadApartmentData() {
     try {
         // 실제 환경에서는 JSON 파일에서 로드
-        const response = await fetch('../data/sejong_classified.json');
+        const response = await fetch('/naver-budongsan/data/sejong_classified.json');
         console.log('Fetching data from:', '../data/sejong_classified.json');
         
         if (!response.ok) {
