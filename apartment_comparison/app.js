@@ -142,7 +142,9 @@ function initializeFilters() {
 // 마을 필터 초기화
 function initializeVillageFilters() {
     const container = document.getElementById('villageFilters');
-    const headerSelect = document.getElementById('villageHeaderFilter');
+    const headerButtons = document.getElementById('villageHeaderButtons');
+    const headerTitle = document.getElementById('villageHeaderTitle');
+    const headerMenu = document.getElementById('villageHeaderMenu');
     
     // 마을별 단지 수 계산
     const villageCounts = {};
@@ -162,44 +164,129 @@ function initializeVillageFilters() {
         </div>
     `).join('');
     
-    // 헤더 드롭다운 초기화
-    if (headerSelect) {
-        headerSelect.innerHTML = '<option value="">전체</option>' + 
-            VILLAGES.filter(village => village !== '전체').map(village => 
-                `<option value="${village}">${village} (${villageCounts[village]}개)</option>`
-            ).join('');
+    // 헤더 스티커 버튼 초기화
+    if (headerButtons) {
+        // 전체 버튼 + 개별 마을 버튼들 생성 (초기에는 모든 체크박스가 선택되어 있으므로 모든 버튼도 active)
+        const allButton = `<span class="village-header-btn all-btn active" data-village="">전체</span>`;
+        const villageButtons = VILLAGES.filter(village => village !== '전체').map(village => 
+            `<span class="village-header-btn active" data-village="${village}">${village}</span>`
+        ).join('');
         
-        // 헤더 드롭다운 이벤트 리스너 추가
-        headerSelect.addEventListener('change', handleVillageHeaderFilter);
+        headerButtons.innerHTML = allButton + villageButtons;
+        
+        // 헤더 버튼 이벤트 리스너 추가
+        headerButtons.addEventListener('click', handleVillageHeaderButtonClick);
+    }
+    
+    // 헤더 타이틀 클릭 이벤트 리스너 추가 (컨텍스트 메뉴 토글)
+    if (headerTitle && headerMenu) {
+        headerTitle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isVisible = headerMenu.style.display !== 'none';
+            headerMenu.style.display = isVisible ? 'none' : 'block';
+            
+            // 화살표 아이콘 회전
+            const chevron = headerTitle.querySelector('.fa-chevron-down');
+            if (chevron) {
+                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+            }
+        });
+        
+        // 문서 클릭 시 메뉴 닫기
+        document.addEventListener('click', function(e) {
+            if (!headerTitle.contains(e.target) && !headerMenu.contains(e.target)) {
+                headerMenu.style.display = 'none';
+                const chevron = headerTitle.querySelector('.fa-chevron-down');
+                if (chevron) {
+                    chevron.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
     }
 }
 
-// 마을 헤더 필터 핸들러
-function handleVillageHeaderFilter(event) {
-    const selectedVillage = event.target.value;
+// 마을 헤더 버튼 클릭 핸들러
+function handleVillageHeaderButtonClick(event) {
+    const target = event.target;
+    if (!target.classList.contains('village-header-btn')) return;
     
-    // 모든 마을 체크박스 해제
-    const villageCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
-    villageCheckboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
+    const selectedVillage = target.dataset.village;
+    const isAllButton = target.classList.contains('all-btn');
     
-    // 선택된 마을만 체크 (전체 선택인 경우 모든 마을 체크)
-    if (selectedVillage === '') {
-        // 전체 선택
-        villageCheckboxes.forEach(checkbox => {
-            checkbox.checked = true;
-        });
+    // 복수 선택 로직
+    if (isAllButton) {
+        // 전체 버튼 클릭 시
+        const allButtons = document.querySelectorAll('.village-header-btn');
+        const villageCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
+        
+        if (target.classList.contains('active')) {
+            // 전체 해제
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            villageCheckboxes.forEach(checkbox => checkbox.checked = false);
+        } else {
+            // 전체 선택
+            allButtons.forEach(btn => btn.classList.add('active'));
+            villageCheckboxes.forEach(checkbox => checkbox.checked = true);
+        }
     } else {
-        // 특정 마을 선택
+        // 개별 마을 버튼 클릭 시
+        const allButton = document.querySelector('.village-header-btn.all-btn');
         const targetCheckbox = document.getElementById(`village-${selectedVillage}`);
+        
+        // 버튼 상태 토글
+        target.classList.toggle('active');
+        
+        // 체크박스 상태 동기화
         if (targetCheckbox) {
-            targetCheckbox.checked = true;
+            targetCheckbox.checked = target.classList.contains('active');
+        }
+        
+        // 전체 버튼 상태 업데이트
+        const activeVillageButtons = document.querySelectorAll('.village-header-btn:not(.all-btn).active');
+        const totalVillageButtons = document.querySelectorAll('.village-header-btn:not(.all-btn)');
+        
+        if (activeVillageButtons.length === totalVillageButtons.length) {
+            // 모든 마을이 선택된 경우
+            allButton.classList.add('active');
+        } else {
+            // 일부만 선택된 경우
+            allButton.classList.remove('active');
         }
     }
     
     // 필터 적용
     applyFilters();
+}
+
+// 마을 체크박스와 헤더 버튼 동기화 함수
+function syncVillageHeaderButtons() {
+    const allButton = document.querySelector('.village-header-btn.all-btn');
+    const villageButtons = document.querySelectorAll('.village-header-btn:not(.all-btn)');
+    const villageCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
+    
+    // 각 마을 버튼과 체크박스 동기화
+    villageButtons.forEach(btn => {
+        const village = btn.dataset.village;
+        const checkbox = document.getElementById(`village-${village}`);
+        
+        if (checkbox) {
+            if (checkbox.checked) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    });
+    
+    // 전체 버튼 상태 업데이트
+    const checkedCount = Array.from(villageCheckboxes).filter(cb => cb.checked).length;
+    const totalCount = villageCheckboxes.length;
+    
+    if (checkedCount === totalCount) {
+        allButton.classList.add('active');
+    } else {
+        allButton.classList.remove('active');
+    }
 }
 
 // 가격 필터 초기화
@@ -573,9 +660,14 @@ function setupEventListeners() {
     // 필터 변경 이벤트
     document.addEventListener('change', function(e) {
         if (e.target.matches('input[type="checkbox"]')) {
+            // 마을 체크박스가 변경된 경우 헤더 버튼 상태도 동기화
+            if (e.target.id.startsWith('village-')) {
+                syncVillageHeaderButtons();
+            }
             applyFilters();
         }
     });
+}
 
     // 테이블 헤더 클릭 정렬 이벤트
     document.addEventListener('click', function(e) {
@@ -603,7 +695,6 @@ function setupEventListeners() {
             applyFilters();
         }
     });
-}
 
 // 테이블 헤더 정렬 처리
 function handleHeaderSort(header) {

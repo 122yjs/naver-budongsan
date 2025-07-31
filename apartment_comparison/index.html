@@ -157,6 +157,92 @@
             color: #7c3aed;
         }
 
+        /* 마을 헤더 필터 스타일 */
+        .village-header-filter {
+            position: relative;
+            min-width: 200px;
+            max-width: 300px;
+            min-height: 40px;
+        }
+        
+        .village-header-title {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: white;
+            transition: all 0.2s;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .village-header-title:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+        
+        .village-header-title .fa-chevron-down {
+            transition: transform 0.2s ease;
+        }
+        
+        .village-header-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            margin-top: 2px;
+            padding: 8px;
+        }
+        
+        .village-header-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .village-header-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .village-header-btn:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+        
+        .village-header-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .village-header-btn.all-btn {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+            font-weight: 500;
+        }
+        
+        .village-header-btn.all-btn.active {
+            background: #2196f3;
+            color: white;
+            border-color: #2196f3;
+        }
+
         .chart-container {
             background: white;
             border-radius: 12px;
@@ -530,12 +616,16 @@
                                 단지명 <i class="fas fa-sort ms-1 text-muted"></i>
                             </th>
                             <th>
-                                <div class="d-flex align-items-center">
-                                    <span class="me-2">마을</span>
-                                    <select id="villageHeaderFilter" class="form-select form-select-sm" style="width: auto; min-width: 120px;">
-                                        <option value="">전체</option>
-                                        <!-- 동적으로 생성됨 -->
-                                    </select>
+                                <div class="village-header-filter">
+                                    <div class="village-header-title" id="villageHeaderTitle" style="cursor: pointer;">
+                                        <strong>마을</strong>
+                                        <i class="fas fa-chevron-down ms-1 text-muted"></i>
+                                    </div>
+                                    <div class="village-header-menu" id="villageHeaderMenu" style="display: none;">
+                                        <div class="village-header-buttons" id="villageHeaderButtons">
+                                            <!-- 동적으로 생성됨 -->
+                                        </div>
+                                    </div>
                                 </div>
                             </th>
                             <th class="sortable" data-sort="price-desc" style="cursor: pointer;">
