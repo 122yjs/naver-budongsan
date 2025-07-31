@@ -266,10 +266,33 @@ function initializeVillageChart() {
                 mode: 'index',
                 intersect: false
             },
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 10,
+                    left: 10,
+                    right: 10
+                }
+            },
             plugins: {
                 legend: {
                     display: true,
-                    position: 'top'
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 14
+                        },
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label;
+                            const value = context.parsed.y.toLocaleString();
+                            return `${label}: ${value}만원`;
+                        }
+                    }
                 }
             },
             scales: {
@@ -280,7 +303,11 @@ function initializeVillageChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: '평균 가격 (만원)'
+                        text: '평균 가격 (만원)',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    grid: {
+                        color: '#e2e8f0' // 그리드 라인 색상
                     },
                     ticks: {
                         callback: function(value) {
@@ -295,7 +322,8 @@ function initializeVillageChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: '평당 평균 가격 (만원)'
+                        text: '평당 평균 가격 (만원)',
+                        font: { size: 14, weight: 'bold' }
                     },
                     grid: {
                         drawOnChartArea: false
@@ -307,20 +335,13 @@ function initializeVillageChart() {
                     }
                 },
                 x: {
+                    grid: {
+                        display: false // X축 그리드 라인 숨김
+                    },
                     ticks: {
                         maxRotation: 45,
-                        minRotation: 45
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label;
-                            const value = context.parsed.y.toLocaleString();
-                            return `${label}: ${value}만원`;
-                        }
+                        minRotation: 45,
+                        font: { size: 12 }
                     }
                 }
             }
@@ -363,12 +384,22 @@ function initializePriceChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '60%', // 도넛 두께 조절
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 20
+                }
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        padding: 15,
-                        usePointStyle: true
+                        padding: 25,
+                        usePointStyle: true,
+                        font: {
+                            size: 14
+                        }
                     }
                 },
                 tooltip: {
