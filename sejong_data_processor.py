@@ -110,16 +110,14 @@ class SejongApartmentClassifier:
         if not area:
             return '정보없음'
             
-        pyeong = area / 3.3  # 평수 변환
-        
-        if pyeong < 20:
-            return '소형 (20평 미만)'
-        elif pyeong < 30:
-            return '중소형 (20-30평)'
-        elif pyeong < 40:
-            return '중형 (30-40평)'
+        if area <= 85:
+            return '소형 (85㎡ 이하)'
+        elif area <= 115:
+            return '중형 (85-115㎡)'
+        elif area <= 175:
+            return '대형 (115-175㎡)'
         else:
-            return '대형 (40평 이상)'
+            return '초대형 (175㎡ 초과)'
     
     def process_data(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -191,24 +189,29 @@ class SejongApartmentClassifier:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         js_output = os.path.join(script_dir, 'apartment_comparison', 'constants.js')
         
+        # 마을 목록 생성 (키워드에서 추출 + 기타)
+        villages = list(self.village_keywords.values()) + ['기타(도시형/오피스텔)']
+        
         schema = {
             "village_keywords": self.village_keywords,
+            "villages": villages,
             "price_ranges": [
                 {"min": min_price, "max": max_price, "name": range_name}
                 for min_price, max_price, range_name in self.price_ranges
             ],
             "area_types": [
-                {"min": 0, "max": 66, "name": "소형 (20평 미만)"},    # 20평 ≈ 66㎡
-                {"min": 66, "max": 99, "name": "중소형 (20-30평)"},  # 30평 ≈ 99㎡
-                {"min": 99, "max": 132, "name": "중형 (30-40평)"},   # 40평 ≈ 132㎡
-                {"min": 132, "max": 1000, "name": "대형 (40평 이상)"}
+                {"min": 0, "max": 85, "name": "소형 (85㎡ 이하)"},
+                {"min": 85, "max": 115, "name": "중형 (85-115㎡)"},
+                {"min": 115, "max": 175, "name": "대형 (115-175㎡)"},
+                {"min": 175, "max": 1000, "name": "초대형 (175㎡ 초과)"}
             ]
         }
         
         # JavaScript 모듈 형식으로 변환
         js_content = f"export const VILLAGE_KEYWORDS = {json.dumps(schema['village_keywords'], ensure_ascii=False)};\n" \
                      f"export const PRICE_RANGES = {json.dumps(schema['price_ranges'], ensure_ascii=False)};\n" \
-                     f"export const AREA_TYPES = {json.dumps(schema['area_types'], ensure_ascii=False)};\n"
+                     f"export const AREA_TYPES = {json.dumps(schema['area_types'], ensure_ascii=False)};\n\n" \
+                     f"export const VILLAGES = {json.dumps(schema['villages'], ensure_ascii=False)};\n"
         
         # 파일 저장
         with open(js_output, 'w', encoding='utf-8') as f:

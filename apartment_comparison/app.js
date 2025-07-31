@@ -2,7 +2,7 @@
 // 메인 로직 및 이벤트 처리
 
 // 표준 분류 체계 임포트
-import { VILLAGES, PRICE_RANGES } from './constants.js';
+import { VILLAGES, PRICE_RANGES, AREA_TYPES } from './constants.js';
 // 데이터 처리 함수 임포트
 import { initializeData } from './data.js';
 
@@ -133,6 +133,7 @@ function showChartError() {
 function initializeFilters() {
     initializeVillageFilters();
     initializePriceFilters();
+    initializeAreaFilters();
 }
 
 // 마을 필터 초기화
@@ -174,6 +175,28 @@ function initializePriceFilters() {
             <input type="checkbox" id="price-${range.name}" value="${range.name}" checked>
             <label for="price-${range.name}" class="mb-0">
                 ${range.name} <span class="text-muted">(${priceCounts[range.name] || 0}개)</span>
+            </label>
+        </div>
+    `).join('');
+}
+
+// 평형 필터 초기화
+function initializeAreaFilters() {
+    const container = document.getElementById('areaFilters');
+    
+    // 평형별 단지 수 계산
+    const areaCounts = {};
+    AREA_TYPES.forEach(area => {
+        areaCounts[area.name] = window.apartmentData.filter(item => 
+            item.평형구간 === area.name
+        ).length;
+    });
+    
+    container.innerHTML = AREA_TYPES.map(area => `
+        <div class="filter-item">
+            <input type="checkbox" id="area-${area.name}" value="${area.name}" checked>
+            <label for="area-${area.name}" class="mb-0">
+                ${area.name} <span class="text-muted">(${areaCounts[area.name] || 0}개)</span>
             </label>
         </div>
     `).join('');
@@ -433,6 +456,8 @@ function setupEventListeners() {
             'clearAllVillagesBtn': () => toggleAllCheckboxes('village', false),
             'selectAllPricesBtn': () => toggleAllCheckboxes('price', true),
             'clearAllPricesBtn': () => toggleAllCheckboxes('price', false),
+            'selectAllAreasBtn': () => toggleAllCheckboxes('area', true),
+            'clearAllAreasBtn': () => toggleAllCheckboxes('area', false),
         };
 
         if (actions[target.id]) {
@@ -446,14 +471,55 @@ function setupEventListeners() {
 function applyFilters() {
     const selectedVillages = getSelectedFilters('village');
     const selectedPrices = getSelectedFilters('price');
+    const selectedAreas = getSelectedFilters('area');
     
+    console.log('🔍 필터 적용 시작:', {
+        selectedVillages: selectedVillages,
+        selectedPrices: selectedPrices,
+        selectedAreas: selectedAreas,
+        totalData: window.apartmentData.length
+    });
+    
+    // 데이터 유효성 검증
+    if (!window.apartmentData || window.apartmentData.length === 0) {
+        console.warn('⚠️ 원본 데이터가 없습니다');
+        window.filteredData = [];
+        updateDisplay();
+        return;
+    }
+    
+    let debugCount = 0;
     window.filteredData = window.apartmentData.filter(item => {
+        // 각 필터 조건 개별 검증
         const villageMatch = selectedVillages.length === 0 || 
             selectedVillages.includes(item.마을분류);
         const priceMatch = selectedPrices.length === 0 || 
             selectedPrices.includes(item.가격구간);
+        const areaMatch = selectedAreas.length === 0 || 
+            selectedAreas.includes(item.평형구간);
         
-        return villageMatch && priceMatch;
+        const finalMatch = villageMatch && priceMatch && areaMatch;
+        
+        // 디버깅용 로그 (처음 5개 항목만)
+        if (debugCount < 5 && finalMatch) {
+            console.log(`📋 ${item.단지명}:`, {
+                마을분류: item.마을분류,
+                가격구간: item.가격구간,
+                평형구간: item.평형구간,
+                villageMatch,
+                priceMatch,
+                areaMatch,
+                finalMatch
+            });
+            debugCount++;
+        }
+        
+        return finalMatch;
+    });
+    
+    console.log('✅ 필터링 완료:', {
+        filteredCount: window.filteredData.length,
+        originalCount: window.apartmentData.length
     });
     
     updateDisplay();
@@ -526,7 +592,10 @@ function updateTable() {
                 <div class="fw-semibold">${item.표시가격}</div>
                 <span class="price-badge ${item.가격배지}">${item.가격구간}</span>
             </td>
-            <td>${item.표시면적}</td>
+            <td>
+                <div class="fw-semibold">${item.표시면적}</div>
+                <span class="area-badge">${item.평형구간}</span>
+            </td>
             <td>${item.표시년도}</td>
             <td>${(item.총세대수 || 0).toLocaleString()}세대</td>
         </tr>
