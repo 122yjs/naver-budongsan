@@ -239,24 +239,30 @@ function initializeVillageChart() {
         villageChart.destroy();
     }
     
-    villageChart = new Chart(ctx, {
+        villageChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: villageData.labels,
             datasets: [{
                 label: '평균 가격 (만원)',
                 data: villageData.prices,
-                backgroundColor: 'rgba(37, 99, 235, 0.6)',
-                borderColor: 'rgba(37, 99, 235, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: 'rgba(59, 130, 246, 1)',
                 borderWidth: 1,
-                yAxisID: 'y'
+                borderRadius: 8,
+                yAxisID: 'y',
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
             }, {
                 label: '평당 평균 가격 (만원)',
                 data: villageData.pyeongPrices,
-                backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                borderColor: 'rgba(239, 68, 68, 1)',
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderColor: 'rgba(16, 185, 129, 1)',
                 borderWidth: 1,
-                yAxisID: 'y1'
+                borderRadius: 8,
+                yAxisID: 'y1',
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
             }]
         },
         options: {
@@ -266,26 +272,33 @@ function initializeVillageChart() {
                 mode: 'index',
                 intersect: false
             },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            },
             layout: {
                 padding: {
-                    top: 10,
-                    bottom: 10,
-                    left: 10,
-                    right: 10
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 20
                 }
             },
             plugins: {
                 legend: {
-                    display: true,
                     position: 'top',
                     labels: {
-                        font: {
-                            size: 14
-                        },
-                        padding: 20
+                        font: { size: 14, family: "'Pretendard', sans-serif" },
+                        padding: 25,
+                        usePointStyle: true,
+                        pointStyle: 'rectRounded'
                     }
                 },
                 tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 14, family: "'Pretendard', sans-serif" },
+                    bodyFont: { size: 12, family: "'Pretendard', sans-serif" },
+                    padding: 12,
                     callbacks: {
                         label: function(context) {
                             const label = context.dataset.label;
@@ -297,51 +310,41 @@ function initializeVillageChart() {
             },
             scales: {
                 y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
                     beginAtZero: true,
                     title: {
                         display: true,
                         text: '평균 가격 (만원)',
-                        font: { size: 14, weight: 'bold' }
+                        font: { size: 14, weight: '600', family: "'Pretendard', sans-serif" }
                     },
                     grid: {
-                        color: '#e2e8f0' // 그리드 라인 색상
+                        color: '#e9e9e9',
+                        borderDash: [5, 5] // 점선 그리드
                     },
                     ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString() + '만원';
-                        }
+                        font: { family: "'Pretendard', sans-serif" },
+                        callback: (value) => `${(value / 10000).toFixed(1)}억`
                     }
                 },
                 y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
                     beginAtZero: true,
+                    position: 'right',
                     title: {
                         display: true,
                         text: '평당 평균 가격 (만원)',
-                        font: { size: 14, weight: 'bold' }
+                        font: { size: 14, weight: '600', family: "'Pretendard', sans-serif" }
                     },
-                    grid: {
-                        drawOnChartArea: false
-                    },
+                    grid: { drawOnChartArea: false },
                     ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString() + '만원';
-                        }
+                        font: { family: "'Pretendard', sans-serif" },
+                        callback: (value) => `${value.toLocaleString()}만원`
                     }
                 },
                 x: {
-                    grid: {
-                        display: false // X축 그리드 라인 숨김
-                    },
+                    grid: { display: false },
                     ticks: {
+                        font: { size: 12, family: "'Pretendard', sans-serif" },
                         maxRotation: 45,
-                        minRotation: 45,
-                        font: { size: 12 }
+                        minRotation: 45
                     }
                 }
             }
@@ -366,25 +369,30 @@ function initializePriceChart() {
         priceChart.destroy();
     }
     
-    priceChart = new Chart(ctx, {
+        priceChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: priceData.labels,
             datasets: [{
                 data: priceData.counts,
                 backgroundColor: [
-                    '#ef4444', '#f97316', '#eab308', '#84cc16',
-                    '#22c55e', '#06b6d4', '#3b82f6', '#6366f1',
-                    '#8b5cf6', '#a855f7'
+                    '#3b82f6', '#16a34a', '#f97316', '#ef4444',
+                    '#8b5cf6', '#06b6d4', '#eab308', '#db2777',
+                    '#64748b', '#7c3aed'
                 ],
-                borderWidth: 2,
-                borderColor: '#ffffff'
+                borderColor: '#ffffff',
+                borderWidth: 3,
+                spacing: 5 // 섹션 간 간격
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%', // 도넛 두께 조절
+            cutout: '70%',
+            animation: {
+                duration: 1200,
+                easing: 'easeOutCubic'
+            },
             layout: {
                 padding: {
                     top: 10,
@@ -395,14 +403,17 @@ function initializePriceChart() {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        padding: 25,
+                        padding: 30,
                         usePointStyle: true,
-                        font: {
-                            size: 14
-                        }
+                        pointStyle: 'rectRounded',
+                        font: { size: 14, family: "'Pretendard', sans-serif" }
                     }
                 },
                 tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 14, family: "'Pretendard', sans-serif" },
+                    bodyFont: { size: 12, family: "'Pretendard', sans-serif" },
+                    padding: 12,
                     callbacks: {
                         label: function(context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
