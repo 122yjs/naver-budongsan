@@ -593,6 +593,10 @@ function updateTable() {
                 <span class="price-badge ${item.가격배지}">${item.가격구간}</span>
             </td>
             <td>
+                <div class="fw-semibold">${(item['평당가격(만원)'] || 0).toLocaleString()}만원</div>
+                <div class="small text-muted">평당</div>
+            </td>
+            <td>
                 <div class="fw-semibold">${item.표시면적}</div>
                 <span class="area-badge">${item.평형구간}</span>
             </td>
@@ -609,6 +613,10 @@ function getSortFunction(sortType) {
             return (a, b) => (b['중간매매가(만원)'] || 0) - (a['중간매매가(만원)'] || 0);
         case 'price-asc':
             return (a, b) => (a['중간매매가(만원)'] || 0) - (b['중간매매가(만원)'] || 0);
+        case 'pyeong-desc':
+            return (a, b) => (b['평당가격(만원)'] || 0) - (a['평당가격(만원)'] || 0);
+        case 'pyeong-asc':
+            return (a, b) => (a['평당가격(만원)'] || 0) - (b['평당가격(만원)'] || 0);
         case 'name-asc':
             return (a, b) => a.단지명.localeCompare(b.단지명);
         case 'area-desc':

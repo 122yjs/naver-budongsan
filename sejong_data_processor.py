@@ -119,6 +119,21 @@ class SejongApartmentClassifier:
         else:
             return '초대형 (175㎡ 초과)'
     
+    def calculate_price_per_pyeong(self, price_per_33sqm: float) -> float:
+        """
+        3.3㎡당 가격을 평당가격으로 변환
+        
+        Args:
+            price_per_33sqm: 3.3㎡당 가격 (만원)
+            
+        Returns:
+            평당가격 (만원)
+        """
+        if not price_per_33sqm:
+            return 0
+        # 1평 = 3.3㎡이므로 그대로 반환
+        return price_per_33sqm
+    
     def process_data(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         전체 데이터 처리 및 통계 생성
@@ -139,18 +154,23 @@ class SejongApartmentClassifier:
             complex_name = item.get('단지명', '')
             price = item.get('중간매매가(만원)', 0)
             area = item.get('대표면적(㎡)', 0)
+            price_per_33sqm = item.get('중간매매단가(만원/3.3㎡)', 0)
             
             # 분류 수행
             village = self.classify_village(complex_name)
             price_range = self.classify_price_range(price)
             area_type = self.classify_area_type(area)
             
+            # 평당가격 계산
+            price_per_pyeong = self.calculate_price_per_pyeong(price_per_33sqm)
+            
             # 처리된 데이터 생성
             processed_item = {
                 **item,  # 원본 데이터 유지
                 '마을분류': village,
                 '가격구간': price_range, 
-                '평형구간': area_type
+                '평형구간': area_type,
+                '평당가격(만원)': price_per_pyeong
             }
             processed_data.append(processed_item)
             
