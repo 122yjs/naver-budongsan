@@ -147,7 +147,7 @@ function initializeVillageFilters() {
         ).length;
     });
     
-    container.innerHTML = VILLAGES.map(village => `
+    container.innerHTML = VILLAGES.filter(village => village !== '전체').map(village => `
         <div class="filter-item">
             <input type="checkbox" id="village-${village}" value="${village}" checked>
             <label for="village-${village}" class="mb-0">
@@ -402,19 +402,43 @@ function calculatePriceDistribution() {
     };
 }
 
+// 체크박스 전체 선택/해제 유틸리티 함수
+function toggleAllCheckboxes(type, checked) {
+    const checkboxes = document.querySelectorAll(`input[type="checkbox"][id^="${type}-"]`);
+    checkboxes.forEach(cb => cb.checked = checked);
+}
+
 // 이벤트 리스너 설정
 function setupEventListeners() {
     // 필터 변경 이벤트
     document.addEventListener('change', function(e) {
-        if (e.target.type === 'checkbox') {
+        if (e.target.matches('input[type="checkbox"]')) {
             applyFilters();
         }
     });
-    
+
     // 정렬 변경 이벤트
     document.getElementById('sortSelect').addEventListener('change', function(e) {
         currentSort = e.target.value;
         updateTable();
+    });
+
+    // 필터 버튼 이벤트 (이벤트 위임 사용)
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        const actions = {
+            'selectAllVillagesBtn': () => toggleAllCheckboxes('village', true),
+            'clearAllVillagesBtn': () => toggleAllCheckboxes('village', false),
+            'selectAllPricesBtn': () => toggleAllCheckboxes('price', true),
+            'clearAllPricesBtn': () => toggleAllCheckboxes('price', false),
+        };
+
+        if (actions[target.id]) {
+            actions[target.id]();
+            applyFilters();
+        }
     });
 }
 
@@ -554,32 +578,6 @@ function updateCharts() {
     } catch (error) {
         console.error('❌ 차트 업데이트 오류:', error);
     }
-}
-
-// 마을 필터 전체 선택/해제
-function selectAllVillages() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
-    checkboxes.forEach(cb => cb.checked = true);
-    applyFilters();
-}
-
-function clearAllVillages() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
-    checkboxes.forEach(cb => cb.checked = false);
-    applyFilters();
-}
-
-// 가격 필터 전체 선택/해제
-function selectAllPrices() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="price-"]');
-    checkboxes.forEach(cb => cb.checked = true);
-    applyFilters();
-}
-
-function clearAllPrices() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="price-"]');
-    checkboxes.forEach(cb => cb.checked = false);
-    applyFilters();
 }
 
 // 유틸리티 함수들
