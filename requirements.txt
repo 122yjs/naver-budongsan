@@ -1,0 +1,9 @@
+# 필수 패키지 (코어 기능용)
+requests==2.31.0
+pandas==2.1.4
+openpyxl==3.1.2
+
+# 선택 패키지 (분석 및 시각화용)
+numpy==1.26.2
+matplotlib==3.8.2
+seaborn==0.13.0

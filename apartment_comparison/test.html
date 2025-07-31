@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세종시 아파트 분류 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>세종시 아파트 분류 시스템 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. 마을 분류 테스트</h2>
+        <div id="village-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 가격 구간 테스트</h2>
+        <div id="price-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 샘플 데이터 분류 결과</h2>
+        <div id="sample-data-results"></div>
+    </div>
+
+    <script>
+        // 마을 분류 함수 (data.js에서 복사)
+        function classifyVillage(complexName) {
+            const villageKeywords = {
+                '가락': '가락마을',
+                '가온': '가온마을', 
+                '가재': '가재마을',
+                '나릇재': '나릿재마을',
+                '도램': '도램마을',
+                '범지기': '범지기마을',
+                '산울': '산울마을',
+                '새나루': '새나루마을',
+                '새뜸': '새뜸마을',
+                '새샘': '새샘마을',
+                '수루배': '수루배마을',
+                '첫마을': '첫마을',
+                '한뜰': '한뜰마을',
+                '해들': '해들마을',
+                '해밀': '해밀마을',
+                '호려울': '호려울마을'
+            };
+            
+            for (const [keyword, villageName] of Object.entries(villageKeywords)) {
+                if (complexName.includes(keyword)) {
+                    return villageName;
+                }
+            }
+            
+            if (complexName.includes('도담')) {
+                return '도램마을';
+            }
+                
+            return '기타(도시형/오피스텔)';
+        }
+
+        // 가격 구간 분류 함수
+        function classifyPriceRange(price) {
+            const ranges = [
+                { min: 0, max: 10450, name: "1억 미만" },
+                { min: 10450, max: 13000, name: "1억대" },
+                { min: 13000, max: 38730, name: "1억 후반-3억대" },
+                { min: 38730, max: 46000, name: "3-4억대" },
+                { min: 46000, max: 50000, name: "4-5억대" },
+                { min: 50000, max: 60000, name: "5-6억대" },
+                { min: 60000, max: 67300, name: "6-7억대" },
+                { min: 67300, max: 73600, name: "7-8억대" },
+                { min: 73600, max: 86400, name: "8-9억대" },
+                { min: 86400, max: 200000, name: "9억 이상" }
+            ];
+            
+            if (!price) return '정보없음';
+            
+            for (const range of ranges) {
+                if (price >= range.min && price < range.max) {
+                    return range.name;
+                }
+            }
+            
+            return '9억 이상';
+        }
+
+        // 테스트 실행
+        function runTests() {
+            // 1. 마을 분류 테스트
+            testVillageClassification();
+            
+            // 2. 가격 구간 테스트
+            testPriceClassification();
+            
+            // 3. 샘플 데이터 테스트
+            testSampleData();
+        }
+
+        function testVillageClassification() {
+            const testCases = [
+                { name: '나릿재6단지한신더휴리저브(주상복합)', expected: '나릿재마을' },
+                { name: '한뜰5단지린스트라우스(주상복합)', expected: '한뜰마을' },
+                { name: '새뜸9단지예미지', expected: '새뜸마을' },
+                { name: '가온10단지더하이스트', expected: '가온마을' },
+                { name: '세종펠리스(도시형)', expected: '기타(도시형/오피스텔)' },
+                { name: '도담2단지웅진스타클래스2차', expected: '도램마을' },
+                { name: '범지기1단지한양수자인에듀센텀', expected: '범지기마일' }
+            ];
+
+            let results = '<table><tr><th>단지명</th><th>예상 결과</th><th>실제 결과</th><th>상태</th></tr>';
+            let passCount = 0;
+
+            testCases.forEach(testCase => {
+                const result = classifyVillage(testCase.name);
+                const pass = result === testCase.expected;
+                if (pass) passCount++;
+
+                results += `<tr>
+                    <td>${testCase.name}</td>
+                    <td>${testCase.expected}</td>
+                    <td>${result}</td>
+                    <td class="${pass ? 'success' : 'error'}">${pass ? '✓ 통과' : '✗ 실패'}</td>
+                </tr>`;
+            });
+
+            results += '</table>';
+            results += `<p class="${passCount === testCases.length ? 'success' : 'error'}">
+                결과: ${passCount}/${testCases.length} 통과
+            </p>`;
+
+            document.getElementById('village-test-results').innerHTML = results;
+        }
+
+        function testPriceClassification() {
+            const testCases = [
+                { price: 8000, expected: '1억 미만' },
+                { price: 12000, expected: '1억대' },
+                { price: 25000, expected: '1억 후반-3억대' },
+                { price: 45000, expected: '3-4억대' },
+                { price: 55000, expected: '5-6억대' },
+                { price: 75000, expected: '7-8억대' },
+                { price: 120000, expected: '9억 이상' }
+            ];
+
+            let results = '<table><tr><th>가격 (만원)</th><th>예상 구간</th><th>실제 구간</th><th>상태</th></tr>';
+            let passCount = 0;
+
+            testCases.forEach(testCase => {
+                const result = classifyPriceRange(testCase.price);
+                const pass = result === testCase.expected;
+                if (pass) passCount++;
+
+                results += `<tr>
+                    <td>${testCase.price.toLocaleString()}</td>
+                    <td>${testCase.expected}</td>
+                    <td>${result}</td>
+                    <td class="${pass ? 'success' : 'error'}">${pass ? '✓ 통과' : '✗ 실패'}</td>
+                </tr>`;
+            });
+
+            results += '</table>';
+            results += `<p class="${passCount === testCases.length ? 'success' : 'error'}">
+                결과: ${passCount}/${testCases.length} 통과
+            </p>`;
+
+            document.getElementById('price-test-results').innerHTML = results;
+        }
+
+        function testSampleData() {
+            const sampleData = [
+                { name: '나릿재6단지한신더휴리저브(주상복합)', price: 120000 },
+                { name: '한뜰5단지린스트라우스(주상복합)', price: 120000 },
+                { name: '새뜸9단지예미지', price: 115000 },
+                { name: '가온10단지더하이스트', price: 82000 },
+                { name: '세종펠리스(도시형)', price: 17500 },
+                { name: '라온프라이빗시티Ⅰ(도시형)', price: 8000 }
+            ];
+
+            let results = '<table><tr><th>단지명</th><th>가격</th><th>마을</th><th>가격구간</th></tr>';
+
+            sampleData.forEach(item => {
+                const village = classifyVillage(item.name);
+                const priceRange = classifyPriceRange(item.price);
+
+                results += `<tr>
+                    <td>${item.name}</td>
+                    <td>${item.price.toLocaleString()}만원</td>
+                    <td>${village}</td>
+                    <td>${priceRange}</td>
+                </tr>`;
+            });
+
+            results += '</table>';
+            
+            // 통계
+            const villageCount = new Set(sampleData.map(item => classifyVillage(item.name))).size;
+            const priceRangeCount = new Set(sampleData.map(item => classifyPriceRange(item.price))).size;
+            
+            results += `<p class="info">
+                분석 결과: ${sampleData.length}개 단지, ${villageCount}개 마을, ${priceRangeCount}개 가격구간
+            </p>`;
+
+            document.getElementById('sample-data-results').innerHTML = results;
+        }
+
+        // 페이지 로드 시 테스트 실행
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
