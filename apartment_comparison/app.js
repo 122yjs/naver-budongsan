@@ -850,10 +850,12 @@ function updateStatistics() {
 // 테이블 업데이트
 function updateTable() {
     const tableBody = document.getElementById('tableBody');
+    const mobileCardContainer = document.getElementById('mobileCardContainer');
     const noResults = document.getElementById('noResults');
     
     if (window.filteredData.length === 0) {
         tableBody.style.display = 'none';
+        mobileCardContainer.innerHTML = '';
         noResults.style.display = 'block';
         return;
     }
@@ -864,6 +866,7 @@ function updateTable() {
     // 정렬 적용
     const sortedData = [...window.filteredData].sort(getSortFunction(currentSort));
     
+    // 데스크톱 테이블 업데이트
     tableBody.innerHTML = sortedData.map(item => `
         <tr>
             <td>
@@ -888,6 +891,52 @@ function updateTable() {
             <td>${item.표시년도}</td>
             <td>${(item.총세대수 || 0).toLocaleString()}세대</td>
         </tr>
+    `).join('');
+    
+    // 모바일 카드 업데이트
+    updateMobileCards(sortedData);
+}
+
+// 모바일 카드 업데이트
+function updateMobileCards(data) {
+    const mobileCardContainer = document.getElementById('mobileCardContainer');
+    
+    mobileCardContainer.innerHTML = data.map(item => `
+        <div class="mobile-card">
+            <div class="mobile-card-header">
+                <h5 class="mobile-card-title">${item.단지명}</h5>
+                <span class="village-tag mobile-card-village">${item.마을분류}</span>
+            </div>
+            
+            <div class="mobile-card-body">
+                <div class="mobile-card-item">
+                    <div class="mobile-card-label">평당가격</div>
+                    <div class="mobile-card-value">${(item['평당가격(만원)'] || 0).toLocaleString()}만원</div>
+                </div>
+                
+                <div class="mobile-card-item">
+                    <div class="mobile-card-label">면적</div>
+                    <div class="mobile-card-value">${item.표시면적}</div>
+                </div>
+                
+                <div class="mobile-card-item">
+                    <div class="mobile-card-label">준공년도</div>
+                    <div class="mobile-card-value">${item.표시년도}</div>
+                </div>
+                
+                <div class="mobile-card-item">
+                    <div class="mobile-card-label">세대수</div>
+                    <div class="mobile-card-value">${(item.총세대수 || 0).toLocaleString()}세대</div>
+                </div>
+                
+                <div class="mobile-card-price">
+                    <div class="mobile-card-label">중간매매가</div>
+                    <div class="mobile-card-value">${item.표시가격}</div>
+                    <span class="price-badge ${item.가격배지} mt-2 d-inline-block">${item.가격구간}</span>
+                    <span class="area-badge ms-2 d-inline-block">${item.평형구간}</span>
+                </div>
+            </div>
+        </div>
     `).join('');
 }
 

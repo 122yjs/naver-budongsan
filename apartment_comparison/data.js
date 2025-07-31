@@ -92,9 +92,12 @@ function getPriceBadgeClass(price) {
 // 데이터 로딩 함수 (실제 JSON 파일에서 로드)
 async function loadApartmentData() {
     try {
-        // 실제 환경에서는 JSON 파일에서 로드
-        const response = await fetch('/naver-budongsan/data/sejong_classified.json');
-        console.log('Fetching data from:', '../data/sejong_classified.json');
+        // 환경에 따른 경로 자동 선택
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const dataPath = isGitHubPages ? '/naver-budongsan/data/sejong_classified.json' : '../data/sejong_classified.json';
+        
+        const response = await fetch(dataPath);
+        console.log('Fetching data from:', dataPath);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
