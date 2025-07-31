@@ -178,21 +178,68 @@ function initializeVillageFilters() {
         headerButtons.addEventListener('click', handleVillageHeaderButtonClick);
     }
     
-    // 헤더 타이틀 클릭 이벤트 리스너 추가 (컨텍스트 메뉴 토글)
-    if (headerTitle && headerMenu) {
+    // 모바일 팝업 버튼 초기화
+    const popupButtons = document.getElementById('villagePopupButtons');
+    if (popupButtons) {
+        const allButton = `<span class="village-header-btn all-btn active" data-village="">전체</span>`;
+        const villageButtons = VILLAGES.filter(village => village !== '전체').map(village => 
+            `<span class="village-header-btn active" data-village="${village}">${village}</span>`
+        ).join('');
+        
+        popupButtons.innerHTML = allButton + villageButtons;
+        
+        // 팝업 버튼 이벤트 리스너 추가
+        popupButtons.addEventListener('click', handleVillagePopupButtonClick);
+    }
+    
+    // 헤더 타이틀 클릭 이벤트 리스너 추가 (데스크톱: 드롭다운, 모바일: 팝업)
+    if (headerTitle) {
         headerTitle.addEventListener('click', function(e) {
             e.stopPropagation();
-            const isVisible = headerMenu.style.display !== 'none';
-            headerMenu.style.display = isVisible ? 'none' : 'block';
             
-            // 화살표 아이콘 회전
-            const chevron = headerTitle.querySelector('.fa-chevron-down');
-            if (chevron) {
-                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+            // 모바일 체크 (768px 이하)
+            if (window.innerWidth <= 768) {
+                // 모바일에서는 팝업 열기
+                const popupOverlay = document.getElementById('villagePopupOverlay');
+                if (popupOverlay) {
+                    popupOverlay.style.display = 'block';
+                    // 팝업 버튼 상태를 현재 선택 상태와 동기화
+                    syncPopupWithCheckboxes();
+                }
+            } else {
+                // 데스크톱에서는 드롭다운 토글
+                const isVisible = headerMenu.style.display !== 'none';
+                headerMenu.style.display = isVisible ? 'none' : 'block';
+                
+                // 화살표 아이콘 회전
+                const chevron = headerTitle.querySelector('.fa-chevron-down');
+                if (chevron) {
+                    chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                }
             }
         });
+    }
+    
+    // 팝업 닫기 이벤트 리스너
+    const popupOverlay = document.getElementById('villagePopupOverlay');
+    const popupClose = document.getElementById('villagePopupClose');
+    
+    if (popupOverlay && popupClose) {
+        // 닫기 버튼 클릭
+        popupClose.addEventListener('click', function() {
+            popupOverlay.style.display = 'none';
+        });
         
-        // 문서 클릭 시 메뉴 닫기
+        // 오버레이 클릭 시 닫기
+        popupOverlay.addEventListener('click', function(e) {
+            if (e.target === popupOverlay) {
+                popupOverlay.style.display = 'none';
+            }
+        });
+    }
+        
+    // 문서 클릭 시 드롭다운 메뉴 닫기 (데스크톱용)
+    if (headerMenu) {
         document.addEventListener('click', function(e) {
             if (!headerTitle.contains(e.target) && !headerMenu.contains(e.target)) {
                 headerMenu.style.display = 'none';
@@ -205,11 +252,24 @@ function initializeVillageFilters() {
     }
 }
 
-// 마을 헤더 버튼 클릭 핸들러
+// 마을 헤더 버튼 클릭 핸들러 (데스크톱 드롭다운용)
 function handleVillageHeaderButtonClick(event) {
     const target = event.target;
     if (!target.classList.contains('village-header-btn')) return;
     
+    handleVillageButtonLogic(target, '#villageHeaderButtons');
+}
+
+// 마을 팝업 버튼 클릭 핸들러 (모바일 팝업용)
+function handleVillagePopupButtonClick(event) {
+    const target = event.target;
+    if (!target.classList.contains('village-header-btn')) return;
+    
+    handleVillageButtonLogic(target, '#villagePopupButtons');
+}
+
+// 마을 버튼 클릭 로직 (공통)
+function handleVillageButtonLogic(target, containerSelector) {
     const selectedVillage = target.dataset.village;
     const isAllButton = target.classList.contains('all-btn');
     
@@ -230,15 +290,27 @@ function handleVillageHeaderButtonClick(event) {
         }
     } else {
         // 개별 마을 버튼 클릭 시
-        const allButton = document.querySelector('.village-header-btn.all-btn');
+        const allButtons = document.querySelectorAll('.village-header-btn.all-btn');
         const targetCheckbox = document.getElementById(`village-${selectedVillage}`);
         
-        // 버튼 상태 토글
+        // 버튼 상태 토글 (드롭다운과 팝업 모두)
+        const headerButton = document.querySelector(`#villageHeaderButtons .village-header-btn[data-village="${selectedVillage}"]`);
+        const popupButton = document.querySelector(`#villagePopupButtons .village-header-btn[data-village="${selectedVillage}"]`);
+        
         target.classList.toggle('active');
+        const isActive = target.classList.contains('active');
+        
+        // 다른 버튼도 동기화
+        if (headerButton && headerButton !== target) {
+            headerButton.classList.toggle('active', isActive);
+        }
+        if (popupButton && popupButton !== target) {
+            popupButton.classList.toggle('active', isActive);
+        }
         
         // 체크박스 상태 동기화
         if (targetCheckbox) {
-            targetCheckbox.checked = target.classList.contains('active');
+            targetCheckbox.checked = isActive;
         }
         
         // 전체 버튼 상태 업데이트
@@ -247,15 +319,40 @@ function handleVillageHeaderButtonClick(event) {
         
         if (activeVillageButtons.length === totalVillageButtons.length) {
             // 모든 마을이 선택된 경우
-            allButton.classList.add('active');
+            allButtons.forEach(btn => btn.classList.add('active'));
         } else {
             // 일부만 선택된 경우
-            allButton.classList.remove('active');
+            allButtons.forEach(btn => btn.classList.remove('active'));
         }
     }
     
     // 필터 적용
     applyFilters();
+}
+
+// 팝업 버튼을 체크박스 상태와 동기화
+function syncPopupWithCheckboxes() {
+    const villageCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="village-"]');
+    const popupButtons = document.querySelectorAll('#villagePopupButtons .village-header-btn:not(.all-btn)');
+    const popupAllButton = document.querySelector('#villagePopupButtons .village-header-btn.all-btn');
+    
+    // 각 마을 버튼 동기화
+    popupButtons.forEach(btn => {
+        const village = btn.dataset.village;
+        const checkbox = document.getElementById(`village-${village}`);
+        
+        if (checkbox) {
+            btn.classList.toggle('active', checkbox.checked);
+        }
+    });
+    
+    // 전체 버튼 상태 업데이트
+    const checkedCount = Array.from(villageCheckboxes).filter(cb => cb.checked).length;
+    const totalCount = villageCheckboxes.length;
+    
+    if (popupAllButton) {
+        popupAllButton.classList.toggle('active', checkedCount === totalCount);
+    }
 }
 
 // 마을 체크박스와 헤더 버튼 동기화 함수
