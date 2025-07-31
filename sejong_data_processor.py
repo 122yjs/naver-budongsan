@@ -6,6 +6,8 @@
 """
 
 import json
+import os
+import pandas as pd
 import re
 from typing import Dict, List, Tuple, Any
 
@@ -35,16 +37,16 @@ class SejongApartmentClassifier:
         
         # 10단계 균등 분포 가격 구간
         self.price_ranges = [
-            (0, 10450, '1억 미만'),
-            (10450, 13000, '1억대'), 
-            (13000, 38730, '1억 후반-3억대'),
-            (38730, 46000, '3-4억대'),
-            (46000, 50000, '4-5억대'),
-            (50000, 60000, '5-6억대'),
-            (60000, 67300, '6-7억대'),
-            (67300, 73600, '7-8억대'),
-            (73600, 86400, '8-9억대'),
-            (86400, 200000, '9억 이상')
+            (0, 10000, '1억 미만'),
+            (10000, 19999, '1억대'), 
+            (20000, 29999, '2억대'),
+            (30000, 39999, '3억대'),
+            (40000, 49999, '4억대'),
+            (50000, 59999, '5억대'),
+            (60000, 69999, '6억대'),
+            (70000, 79999, '7억대'),
+            (80000, 89999, '8억대'),
+            (90000, 200000, '9억 이상')
         ]
     
     def classify_village(self, complex_name: str) -> str:
@@ -59,12 +61,16 @@ class SejongApartmentClassifier:
         """
         complex_name = complex_name.strip()
         
-        # 1순위: 직접 마을명 매칭
+        # 1순위: 예외 처리 (특정 단지 우선 분류)
+        if '우빈가온' in complex_name:
+            return '기타(도시형/오피스텔)'
+
+        # 2순위: 직접 마을명 매칭
         for keyword, village_name in self.village_keywords.items():
             if keyword in complex_name:
                 return village_name
         
-        # 2순위: 특별한 패턴 처리
+        # 3순위: 특별한 패턴 처리
         # '도담' 패턴도 도램마을로 분류
         if '도담' in complex_name:
             return '도램마을'
@@ -181,13 +187,25 @@ class SejongApartmentClassifier:
 
 def main():
     """메인 실행 함수"""
-    # 데이터 로드
-    input_file = r'C:\Users\JSD3\Desktop\PYTHONWORKSPACE\naver-budongsan\output\sejong_budongsan_filtered_20250730_234333.json'
-    
-    with open(input_file, 'r', encoding='utf-8') as f:
-        raw_data = json.load(f)
-    
-    print(f"✅ 원본 데이터 로드 완료: {len(raw_data)}개 단지")
+    # 스크립트의 현재 위치를 기준으로 상대 경로 설정
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file = os.path.join(script_dir, 'data', 'sejong_latest.csv')
+    output_dir = os.path.join(script_dir, 'data')
+    output_file = os.path.join(output_dir, 'sejong_classified.json')
+
+    # 출력 디렉토리 생성
+    os.makedirs(output_dir, exist_ok=True)
+
+    try:
+        # CSV 파일에서 데이터 로드
+        df = pd.read_csv(input_file)
+        # NaN 값을 처리하고 JSON 직렬화 가능한 형태로 변환
+        raw_data = df.where(pd.notnull(df), None).to_dict('records')
+        print(f"✅ 원본 데이터 로드 완료: {len(raw_data)}개 단지 ({input_file})")
+    except FileNotFoundError:
+        print(f"❌ 입력 파일 없음: {input_file}")
+        print("먼저 main.py를 실행하여 데이터를 수집하세요.")
+        return
     
     # 분류기 초기화 및 처리
     classifier = SejongApartmentClassifier()
@@ -195,31 +213,22 @@ def main():
     
     print("\n🏘️ 마을별 분류 결과:")
     print("-" * 60)
-    
-    # 마을별 통계 출력 (가격 높은 순)
     sorted_villages = sorted(
         result['village_summary'].items(), 
         key=lambda x: x[1]['평균가격'], 
         reverse=True
     )
-    
     for village, stats in sorted_villages:
         print(f"{village:15s}: {stats['단지수']:2d}개 단지, "
               f"평균 {stats['평균가격']:5.0f}만원 "
               f"({stats['최저가격']:,.0f}~{stats['최고가격']:,.0f})")
     
-    print(f"\n💰 가격 구간별 분포:")
-    print("-" * 60)
-    for price_range, count in result['price_distribution'].items():
-        percentage = (count / result['total_count']) * 100
-        print(f"{price_range:15s}: {count:2d}개 ({percentage:4.1f}%)")
-    
-    # 처리된 데이터 저장
-    output_file = r'C:\Users\JSD3\Desktop\PYTHONWORKSPACE\naver-budongsan\sejong_apartments_classified.json'
+    # 처리된 데이터(아파트 목록)를 JSON 파일로 저장
     with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        # data.js는 배열을 기대하므로 'processed_data'만 저장
+        json.dump(result['processed_data'], f, ensure_ascii=False, indent=4)
     
-    print(f"\n✅ 처리 완료! 결과 저장: {output_file}")
+    print(f"\n✅ 처리 완료! 결과가 다음 파일에 저장되었습니다: {output_file}")
     return result
 
 if __name__ == "__main__":
